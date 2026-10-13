@@ -1,7 +1,7 @@
 """Compara una planilla generada con una planilla de referencia armada a mano.
 
 Uso:
-    python verificar.py listing.xlsx teins.xlsx serie_inicial referencia.xlsx
+    python verificar.py listing.xlsx twins.xlsx serie_inicial referencia.xlsx
 """
 import io
 import sys
@@ -27,8 +27,8 @@ def datos(wb):
     return out
 
 
-def main(listing, teins, serie, ref):
-    with open(listing, "rb") as a, open(teins, "rb") as b:
+def main(listing, twins, serie, ref):
+    with open(listing, "rb") as a, open(twins, "rb") as b:
         res = generar(a, b, serie)
     gen = datos(load_workbook(io.BytesIO(res.contenido)))
     exp = datos(load_workbook(ref))
