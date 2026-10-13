@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: marmoleo
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 2 --timeout 60
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      # Opcional: definir APP_PASSWORD en el panel de Render para pedir contraseña.
+      - key: APP_USER
+        value: marmoleo
+      - key: APP_PASSWORD
+        sync: false

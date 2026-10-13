@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planilla de marmoleo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1f2a33;
+    --muted: #5b6770;
+    --paper: #f3f5f6;
+    --surface: #ffffff;
+    --line: #d3d9de;
+    --accent: #8e2b34;
+    --accent-dark: #701f27;
+    --ok: #2b6a4c;
+    --warn-bg: #fff6e0;
+    --warn-line: #e3c36a;
+    --warn-ink: #6b4a00;
+    --err-bg: #fdecee;
+    --err-line: #e0959c;
+    --err-ink: #7a1b25;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 16px/1.5 "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 20px 72px; }
+  h1 { margin: 0 0 6px; font-size: 1.75rem; font-weight: 600; letter-spacing: -0.01em; }
+  .lead { margin: 0 0 28px; color: var(--muted); max-width: 60ch; }
+
+  form { display: grid; gap: 14px; }
+  .paso {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 18px 18px;
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    column-gap: 14px;
+  }
+  .paso .n {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--ink); color: #fff;
+    font-size: .875rem; font-weight: 600;
+    display: grid; place-items: center; margin-top: 1px;
+  }
+  .paso h2 { margin: 0; font-size: 1rem; font-weight: 600; line-height: 30px; }
+  .paso .cuerpo { grid-column: 2; }
+  .ayuda { margin: 2px 0 10px; color: var(--muted); font-size: .875rem; }
+
+  .archivo {
+    display: flex; align-items: center; gap: 12px;
+    border: 1.5px dashed #aab3ba; border-radius: 6px;
+    padding: 12px 14px; cursor: pointer; background: #fafbfb;
+    transition: border-color .15s, background .15s;
+  }
+  .archivo:hover, .archivo.arrastrando { border-color: var(--accent); background: #fcf6f6; }
+  .archivo:focus-within { outline: 3px solid rgba(142,43,52,.35); outline-offset: 2px; }
+  .archivo input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .archivo .btn-falso {
+    flex: none; border: 1px solid var(--ink); border-radius: 4px; padding: 5px 12px;
+    font-size: .875rem; font-weight: 500; background: var(--surface);
+  }
+  .archivo .nombre { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+  .archivo.cargado { border-style: solid; border-color: var(--ok); background: #f5faf7; }
+  .archivo.cargado .nombre { color: var(--ink); font-weight: 500; }
+
+  .campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  label.campo { display: grid; gap: 4px; font-size: .875rem; font-weight: 500; }
+  label.campo small { font-weight: 400; color: var(--muted); font-size: .8125rem; }
+  input[type=text], input[type=date] {
+    font: inherit; font-size: 1rem; color: var(--ink);
+    border: 1px solid #98a2aa; border-radius: 4px; padding: 8px 10px; width: 100%; background: #fff;
+  }
+  input[type=text] { letter-spacing: .04em; }
+  input:focus-visible, button:focus-visible, a.descarga:focus-visible { outline: 3px solid rgba(142,43,52,.4); outline-offset: 2px; }
+
+  .acciones { display: flex; align-items: center; gap: 14px; margin-top: 4px; flex-wrap: wrap; }
+  button.primario, a.descarga {
+    font: inherit; font-weight: 600; font-size: 1rem; text-decoration: none; cursor: pointer;
+    background: var(--accent); color: #fff; border: 0; border-radius: 5px; padding: 11px 22px;
+    display: inline-block;
+  }
+  button.primario:hover, a.descarga:hover { background: var(--accent-dark); }
+  button.primario[disabled] { background: #b9a3a6; cursor: progress; }
+
+  .mensaje { border-radius: 6px; padding: 12px 14px; margin-top: 16px; border: 1px solid; }
+  .mensaje.error { background: var(--err-bg); border-color: var(--err-line); color: var(--err-ink); }
+  .mensaje.aviso { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn-ink); }
+  .mensaje strong { display: block; margin-bottom: 4px; }
+  .mensaje ul { margin: 0; padding-left: 20px; }
+
+  #resultado { margin-top: 28px; }
+  #resultado[hidden], .mensaje[hidden] { display: none; }
+  .resumen {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px;
+    margin-bottom: 12px;
+  }
+  .resumen h2 { margin: 0; font-size: 1.125rem; font-weight: 600; }
+  .resumen p { margin: 2px 0 0; color: var(--muted); font-size: .9375rem; }
+  .tabla-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: .9375rem; }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { font-weight: 600; background: #f7f8f9; font-size: .875rem; }
+  tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; }
+  td.nota { color: var(--muted); white-space: normal; }
+
+  @media (max-width: 520px) {
+    main { padding-top: 24px; }
+    .paso { grid-template-columns: 1fr; }
+    .paso .cuerpo { grid-column: 1; }
+    .paso .n { margin-bottom: 6px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Planilla de marmoleo</h1>
+  <p class="lead">Se cargan el Listing Faena y el Teins del día, y se descarga la planilla con una hoja por tropa W, lista para completar.</p>
+
+  <form id="form" novalidate>
+    <section class="paso">
+      <span class="n" aria-hidden="true">1</span>
+      <h2 id="h-listing">Listing Faena</h2>
+      <div class="cuerpo">
+        <p class="ayuda">Archivo GD_informe_ListingFaena descargado del sistema.</p>
+        <label class="archivo" id="drop-listing">
+          <input type="file" name="listing" accept=".xlsx" aria-labelledby="h-listing">
+          <span class="btn-falso">Elegir archivo</span>
+          <span class="nombre">Ningún archivo seleccionado</span>
+        </label>
+      </div>
+    </section>
+
+    <section class="paso">
+      <span class="n" aria-hidden="true">2</span>
+      <h2 id="h-teins">Teins</h2>
+      <div class="cuerpo">
+        <p class="ayuda">Archivo DESCARGA_TEINS (faena detallada) del mismo día.</p>
+        <label class="archivo" id="drop-teins">
+          <input type="file" name="teins" accept=".xlsx" aria-labelledby="h-teins">
+          <span class="btn-falso">Elegir archivo</span>
+          <span class="nombre">Ningún archivo seleccionado</span>
+        </label>
+      </div>
+    </section>
+
+    <section class="paso">
+      <span class="n" aria-hidden="true">3</span>
+      <h2>Numeración y fecha</h2>
+      <div class="cuerpo">
+        <div class="campos">
+          <label class="campo">Primer número de serie
+            <input type="text" name="serie" inputmode="numeric" autocomplete="off" placeholder="00018335" pattern="[0-9]*">
+            <small>Las demás hojas continúan en forma correlativa.</small>
+          </label>
+          <label class="campo">Fecha de la planilla (opcional)
+            <input type="date" name="fecha">
+            <small>Si se deja vacía, se usa el día siguiente a la faena.</small>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <div class="acciones">
+      <button class="primario" type="submit" id="generar">Generar planilla</button>
+    </div>
+  </form>
+
+  <div class="mensaje error" id="error" role="alert" hidden></div>
+
+  <section id="resultado" hidden aria-live="polite">
+    <div class="resumen">
+      <div>
+        <h2 id="titulo-resultado"></h2>
+        <p id="detalle-resultado"></p>
+      </div>
+      <a class="descarga" id="descarga" href="#" download>Descargar planilla</a>
+    </div>
+    <div class="mensaje error" id="faltantes" hidden></div>
+    <div class="mensaje aviso" id="avisos" hidden></div>
+    <div class="tabla-wrap" style="margin-top:14px">
+      <table>
+        <thead>
+          <tr>
+            <th>Hoja (tropa)</th>
+            <th class="num">Animales</th>
+            <th>Garrones</th>
+            <th>N° de serie</th>
+            <th>No incluidos</th>
+          </tr>
+        </thead>
+        <tbody id="tabla"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  const form = document.getElementById('form');
+  const btn = document.getElementById('generar');
+  const errorBox = document.getElementById('error');
+  const resultado = document.getElementById('resultado');
+  const avisos = document.getElementById('avisos');
+  let urlActual = null;
+
+  // Casilleros de archivo: nombre elegido y arrastrar y soltar
+  document.querySelectorAll('label.archivo').forEach(label => {
+    const input = label.querySelector('input');
+    const nombre = label.querySelector('.nombre');
+    const mostrar = () => {
+      const f = input.files[0];
+      nombre.textContent = f ? f.name : 'Ningún archivo seleccionado';
+      label.classList.toggle('cargado', !!f);
+    };
+    input.addEventListener('change', mostrar);
+    ['dragenter', 'dragover'].forEach(ev => label.addEventListener(ev, e => {
+      e.preventDefault(); label.classList.add('arrastrando');
+    }));
+    ['dragleave', 'drop'].forEach(ev => label.addEventListener(ev, e => {
+      e.preventDefault(); label.classList.remove('arrastrando');
+    }));
+    label.addEventListener('drop', e => {
+      if (e.dataTransfer.files.length) { input.files = e.dataTransfer.files; mostrar(); }
+    });
+  });
+
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  function mostrarError(msg) {
+    errorBox.textContent = msg;
+    errorBox.hidden = false;
+    resultado.hidden = true;
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    errorBox.hidden = true;
+
+    const fd = new FormData(form);
+    if (!fd.get('listing').name) return mostrarError('Seleccione el archivo del Listing Faena.');
+    if (!fd.get('teins').name) return mostrarError('Seleccione el archivo del Teins.');
+    if (!/^\d+$/.test((fd.get('serie') || '').trim())) return mostrarError('Ingrese el primer número de serie (solo dígitos).');
+
+    btn.disabled = true; btn.textContent = 'Generando…';
+    try {
+      const resp = await fetch('/api/generar', { method: 'POST', body: fd });
+      let data;
+      try { data = await resp.json(); } catch { data = null; }
+      if (!resp.ok || !data || !data.ok) {
+        return mostrarError((data && data.error) || 'No se pudo generar la planilla. Intente nuevamente.');
+      }
+      render(data);
+    } catch {
+      mostrarError('No hay conexión con el servidor. Si la app estuvo inactiva, puede demorar hasta un minuto en iniciar; intente nuevamente.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Generar planilla';
+    }
+  });
+
+  function render(d) {
+    const bytes = Uint8Array.from(atob(d.contenido), c => c.charCodeAt(0));
+    const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    if (urlActual) URL.revokeObjectURL(urlActual);
+    urlActual = URL.createObjectURL(blob);
+    const a = document.getElementById('descarga');
+    a.href = urlActual; a.download = d.archivo; a.textContent = 'Descargar ' + d.archivo;
+
+    const total = d.hojas.reduce((s, h) => s + h.animales, 0);
+    document.getElementById('titulo-resultado').textContent =
+      d.hojas.length + (d.hojas.length === 1 ? ' hoja' : ' hojas') + ' · ' + total + ' animales';
+    document.getElementById('detalle-resultado').textContent =
+      'Fecha de la planilla: ' + d.fecha_planilla + (d.fecha_faena ? ' (faena del ' + d.fecha_faena + ')' : '');
+
+    document.getElementById('tabla').innerHTML = d.hojas.map(h => {
+      const ex = Object.entries(h.excluidos).map(([k, v]) => v + ' ' + esc(k)).join(', ');
+      return '<tr><td>' + h.tropa + '</td><td class="num">' + h.animales + '</td><td>' +
+             h.garron_desde + ' a ' + h.garron_hasta + '</td><td>' + esc(h.serie) +
+             '</td><td class="nota">' + (ex || '—') + '</td></tr>';
+    }).join('');
+
+    const fb = document.getElementById('faltantes');
+    if (d.faltantes.length) {
+      fb.innerHTML = '<strong>Tropas W del Listing que no están completas en el Teins</strong><ul>' +
+        d.faltantes.map(f => '<li>' + (f.estado === 'ausente'
+          ? 'Tropa ' + f.tropa + ': no figura en el Teins (' + f.esperados + ' animales, garrones ' + f.desde + ' a ' + f.hasta + ').'
+          : 'Tropa ' + f.tropa + ': faltan ' + (f.esperados - f.presentes) + ' de ' + f.esperados + ' animales (garrones ' +
+            f.garrones_faltantes.join(', ') + ').') + '</li>').join('') +
+        '</ul><p style="margin:8px 0 0">Es posible que aún no estén valorizadas. Corresponde reclamar a Compra de Hacienda; las tropas ausentes no tienen hoja en la planilla.</p>';
+      fb.hidden = false;
+    } else {
+      fb.hidden = true;
+    }
+    if (d.advertencias.length) {
+      avisos.innerHTML = '<strong>Revisar antes de usar la planilla</strong><ul>' +
+        d.advertencias.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>';
+      avisos.hidden = false;
+    } else {
+      avisos.hidden = true;
+    }
+    resultado.hidden = false;
+    resultado.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+})();
+</script>
+</body>
+</html>
