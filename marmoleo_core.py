@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import io
 import re
+import zipfile
 from collections import defaultdict
 from copy import copy, deepcopy
 from dataclasses import dataclass, field
@@ -248,6 +249,29 @@ def _logo(anchor) -> XLImage:
     return img
 
 
+def _guardar_totales(contenido: bytes, totales: list[tuple[int, int, int]]) -> bytes:
+    """Guarda el resultado de la suma junto a la fórmula de TOTAL AUTORIZADAS.
+
+    openpyxl escribe la fórmula sin el valor calculado. Excel lo recalcula al abrir, pero en vista
+    protegida, en el celular o en las vistas previas la celda se ve vacía. Se agrega el valor para
+    que la suma aparezca siempre; la fórmula se mantiene y sigue recalculándose al editar.
+    totales: lista de (n° de hoja, fila del total, cantidad de garrones).
+    """
+    por_hoja = {f"xl/worksheets/sheet{i}.xml": (fila, n) for i, fila, n in totales}
+    salida = io.BytesIO()
+    with zipfile.ZipFile(io.BytesIO(contenido)) as zin, zipfile.ZipFile(salida, "w", zipfile.ZIP_DEFLATED) as zout:
+        for item in zin.infolist():
+            datos = zin.read(item.filename)
+            if item.filename in por_hoja:
+                fila, n = por_hoja[item.filename]
+                patron = (f'(<c r="E{fila}"[^>]*><f>SUM\\(E{FIRST_DATA_ROW}:E{fila - 1}\\)</f>)<v\\s*/?>(</v>)?')
+                nuevo, k = re.subn(patron, lambda m: f"{m.group(1)}<v>{n}</v>", datos.decode("utf-8"))
+                if k == 1:
+                    datos = nuevo.encode("utf-8")
+            zout.writestr(item, datos)
+    return salida.getvalue()
+
+
 def armar_planilla(listing: Listing, twins: Twins, serie_inicial: str,
                    fecha_planilla: date | None = None) -> Resultado:
     advertencias: list[str] = []
@@ -293,6 +317,7 @@ def armar_planilla(listing: Listing, twins: Twins, serie_inicial: str,
 
     hojas: list[HojaResumen] = []
     nuevas = []
+    totales: list[tuple[int, int, int]] = []
     for idx, (tropa, tramos) in enumerate(tropas_w):
         todos = por_tropa.get(tropa, [])
         w = sorted((a for a in todos if a.amparo == "W"), key=lambda a: a.garron)
@@ -376,6 +401,7 @@ def armar_planilla(listing: Listing, twins: Twins, serie_inicial: str,
         ws.sheet_properties.pageSetUpPr.fitToPage = True
 
         nuevas.append(ws)
+        totales.append((len(nuevas), total, len(w)))
         hojas.append(HojaResumen(tropa, len(w), serie, min(a.garron for a in w), max(a.garron for a in w),
                                  dict(excl)))
 
@@ -397,7 +423,7 @@ def armar_planilla(listing: Listing, twins: Twins, serie_inicial: str,
     buf = io.BytesIO()
     wb.save(buf)
     return Resultado(
-        contenido=buf.getvalue(),
+        contenido=_guardar_totales(buf.getvalue(), totales),
         nombre_archivo=f"planilla_marmoleo_{fecha_planilla:%d%m}.xlsx",
         fecha_faena=fecha_faena,
         fecha_planilla=fecha_planilla,
