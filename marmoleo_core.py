@@ -2,11 +2,11 @@
 
 Entradas
   - Listing Faena (GD_informe_ListingFaena_*.xlsx): define qué tropas son W y en qué orden se faenaron.
-  - Teins (DESCARGA_TEINS_*.xlsx): detalle animal por animal (garrón, clasificación, tipificación, amparo).
+  - Twins (DESCARGA_TWINS_*.xlsx): detalle animal por animal (garrón, clasificación, tipificación, amparo).
 
 Reglas
   - Una hoja por tropa W (según el amparo del Listing), en el orden del Listing.
-  - Dentro de cada hoja, solo los animales con amparo W en el Teins, ordenados por número de garrón.
+  - Dentro de cada hoja, solo los animales con amparo W en el Twins, ordenados por número de garrón.
   - Fecha de la planilla: día siguiente a la faena (o la que se indique).
   - N° de serie: correlativo por hoja, a partir del número inicial indicado.
 """
@@ -62,7 +62,7 @@ class Animal:
 
 
 @dataclass
-class Teins:
+class Twins:
     fecha: date | None
     animales: list[Animal]
 
@@ -157,7 +157,7 @@ def leer_listing(archivo, nombre: str = "Listing Faena") -> Listing:
     return Listing(fecha, tramos)
 
 
-def leer_teins(archivo, nombre: str = "Teins") -> Teins:
+def leer_twins(archivo, nombre: str = "Twins") -> Twins:
     ws = _abrir(archivo, nombre).worksheets[0]
 
     cols: dict[str, int] = {}
@@ -191,7 +191,7 @@ def leer_teins(archivo, nombre: str = "Teins") -> Teins:
         ))
     if not animales:
         raise DatosInvalidos(f"«{nombre}» no tiene animales cargados.")
-    return Teins(fecha, animales)
+    return Twins(fecha, animales)
 
 
 # --------------------------------------------------------------------------- armado
@@ -244,17 +244,17 @@ def _logo(anchor) -> XLImage:
     return img
 
 
-def armar_planilla(listing: Listing, teins: Teins, serie_inicial: str,
+def armar_planilla(listing: Listing, twins: Twins, serie_inicial: str,
                    fecha_planilla: date | None = None) -> Resultado:
     advertencias: list[str] = []
-    faltantes: list[dict] = []   # tropas W del Listing que no están (o no están completas) en el Teins
+    faltantes: list[dict] = []   # tropas W del Listing que no están (o no están completas) en el Twins
 
     # Fecha
-    fecha_faena = listing.fecha or teins.fecha
-    if listing.fecha and teins.fecha and listing.fecha != teins.fecha:
+    fecha_faena = listing.fecha or twins.fecha
+    if listing.fecha and twins.fecha and listing.fecha != twins.fecha:
         advertencias.append(
             f"La fecha de faena no coincide: el Listing indica {listing.fecha:%d/%m/%Y} "
-            f"y el Teins {teins.fecha:%d/%m/%Y}. Se usó la del Listing."
+            f"y el Twins {twins.fecha:%d/%m/%Y}. Se usó la del Listing."
         )
     if fecha_planilla is None:
         if fecha_faena is None:
@@ -269,7 +269,7 @@ def armar_planilla(listing: Listing, teins: Teins, serie_inicial: str,
         raise DatosInvalidos("El Listing Faena no tiene tropas con amparo W.")
 
     por_tropa: dict[int, list[Animal]] = defaultdict(list)
-    for a in teins.animales:
+    for a in twins.animales:
         por_tropa[a.tropa].append(a)
 
     # Animales W en tropas que el Listing no marca como W
@@ -278,7 +278,7 @@ def armar_planilla(listing: Listing, teins: Teins, serie_inicial: str,
         n = sum(1 for a in lista if a.amparo == "W")
         if n and t not in w_set:
             advertencias.append(
-                f"Tropa {t}: el Teins tiene {n} animales con amparo W, pero el Listing no la marca como W. No se incluyó."
+                f"Tropa {t}: el Twins tiene {n} animales con amparo W, pero el Listing no la marca como W. No se incluyó."
             )
 
     # Plantilla
@@ -297,7 +297,7 @@ def armar_planilla(listing: Listing, teins: Teins, serie_inicial: str,
             if a.amparo != "W":
                 excl[a.amparo or "(sin amparo)"] += 1
 
-        # Controles: el Listing contra el Teins
+        # Controles: el Listing contra el Twins
         esperados = sum(t.cantidad for t in tramos)
         desde, hasta = min(t.desde for t in tramos), max(t.hasta for t in tramos)
         if not todos:
@@ -305,17 +305,17 @@ def armar_planilla(listing: Listing, teins: Teins, serie_inicial: str,
                                   desde=desde, hasta=hasta, garrones_faltantes=[]))
             continue
         if len(todos) < esperados:
-            en_teins = {a.garron for a in todos}
+            en_twins = {a.garron for a in todos}
             esperados_g = {g for t in tramos for g in range(t.desde, t.hasta + 1)}
             faltantes.append(dict(tropa=tropa, estado="incompleta", esperados=esperados,
                                   presentes=len(todos), desde=desde, hasta=hasta,
-                                  garrones_faltantes=sorted(esperados_g - en_teins)))
+                                  garrones_faltantes=sorted(esperados_g - en_twins)))
         elif len(todos) > esperados:
             advertencias.append(
-                f"Tropa {tropa}: el Listing indica {esperados} animales y el Teins tiene {len(todos)}."
+                f"Tropa {tropa}: el Listing indica {esperados} animales y el Twins tiene {len(todos)}."
             )
         if not w:
-            advertencias.append(f"Tropa {tropa}: no hay animales con amparo W en el Teins. Se omitió la hoja.")
+            advertencias.append(f"Tropa {tropa}: no hay animales con amparo W en el Twins. Se omitió la hoja.")
             continue
         fuera = [a.garron for a in w if not desde <= a.garron <= hasta]
         if fuera:
@@ -377,7 +377,7 @@ def armar_planilla(listing: Listing, teins: Teins, serie_inicial: str,
         if faltantes:
             lista = ", ".join(str(f["tropa"]) for f in faltantes)
             raise DatosInvalidos(
-                f"Ninguna tropa W del Listing figura completa en el Teins (tropas: {lista}). "
+                f"Ninguna tropa W del Listing figura completa en el Twins (tropas: {lista}). "
                 "Posiblemente aún no estén valorizadas: corresponde reclamar a Compra de Hacienda."
             )
         raise DatosInvalidos("No se generó ninguna hoja: no hay animales W en las tropas W del Listing.")
@@ -401,8 +401,8 @@ def armar_planilla(listing: Listing, teins: Teins, serie_inicial: str,
     )
 
 
-def generar(listing_file, teins_file, serie_inicial: str, fecha_planilla: date | None = None,
-            nombre_listing: str = "Listing Faena", nombre_teins: str = "Teins") -> Resultado:
+def generar(listing_file, twins_file, serie_inicial: str, fecha_planilla: date | None = None,
+            nombre_listing: str = "Listing Faena", nombre_twins: str = "Twins") -> Resultado:
     return armar_planilla(leer_listing(listing_file, nombre_listing),
-                          leer_teins(teins_file, nombre_teins),
+                          leer_twins(twins_file, nombre_twins),
                           serie_inicial, fecha_planilla)
