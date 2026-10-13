@@ -29,6 +29,10 @@ TEMPLATE_PATH = BASE_DIR / "plantilla_base.xlsx"
 FIRST_DATA_ROW = 12
 LAST_COL = 15          # columna O
 SERIE_MIN_WIDTH = 8    # '00018335'
+# Columnas que llevan 1 por defecto en cada fila: SACRAS, LUMBARES, TORACIAS, BOTON, COSTILLAS,
+# C.VERTEBRALES (E a J) y COLOR, CONSISTENCIA, TEXTURA (L a N). MARMOLEO (K) y APTO (O) se completan a mano.
+# La celda de SACRAS suma estos 1: es lo que da el total de garrones en TOTAL AUTORIZADAS.
+COLUMNAS_CON_UNO = (5, 6, 7, 8, 9, 10, 12, 13, 14)
 
 
 class DatosInvalidos(Exception):
@@ -351,6 +355,8 @@ def armar_planilla(listing: Listing, twins: Twins, serie_inicial: str,
             ws.cell(r, 2, a.garron)
             ws.cell(r, 3, a.clas)
             ws.cell(r, 4, a.tip)
+            for c in COLUMNAS_CON_UNO:
+                ws.cell(r, c, 1)
             r += 1
 
         # Fila de total
