@@ -71,6 +71,14 @@
     font-size: .875rem; font-weight: 500; background: var(--surface);
   }
   .archivo .nombre { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+  .archivo .quitar {
+    flex: none; margin-left: auto; width: 30px; height: 30px; border-radius: 50%;
+    border: 1px solid #98a2aa; background: var(--surface); color: var(--ink);
+    font: inherit; font-size: 1.25rem; line-height: 1; cursor: pointer; padding: 0;
+    display: grid; place-items: center;
+  }
+  .archivo .quitar:hover { background: var(--err-bg); border-color: var(--accent); color: var(--accent); }
+  .archivo .quitar[hidden] { display: none; }
   .archivo.cargado { border-style: solid; border-color: var(--ok); background: #f5faf7; }
   .archivo.cargado .nombre { color: var(--ink); font-weight: 500; }
 
@@ -139,6 +147,7 @@
           <input type="file" name="listing" accept=".xlsx" aria-labelledby="h-listing">
           <span class="btn-falso">Elegir archivo</span>
           <span class="nombre">Ningún archivo seleccionado</span>
+          <button type="button" class="quitar" aria-label="Quitar archivo" title="Quitar archivo" hidden>&times;</button>
         </label>
       </div>
     </section>
@@ -152,6 +161,7 @@
           <input type="file" name="twins" accept=".xlsx" aria-labelledby="h-twins">
           <span class="btn-falso">Elegir archivo</span>
           <span class="nombre">Ningún archivo seleccionado</span>
+          <button type="button" class="quitar" aria-label="Quitar archivo" title="Quitar archivo" hidden>&times;</button>
         </label>
       </div>
     </section>
@@ -220,12 +230,21 @@
   document.querySelectorAll('label.archivo').forEach(label => {
     const input = label.querySelector('input');
     const nombre = label.querySelector('.nombre');
+    const quitar = label.querySelector('.quitar');
     const mostrar = () => {
       const f = input.files[0];
       nombre.textContent = f ? f.name : 'Ningún archivo seleccionado';
       label.classList.toggle('cargado', !!f);
+      quitar.hidden = !f;
     };
     input.addEventListener('change', mostrar);
+    quitar.addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation();   // evita que se abra el selector de archivos
+      input.value = '';
+      mostrar();
+      errorBox.hidden = true;
+      resultado.hidden = true;                   // el resultado anterior ya no corresponde a los archivos cargados
+    });
     ['dragenter', 'dragover'].forEach(ev => label.addEventListener(ev, e => {
       e.preventDefault(); label.classList.add('arrastrando');
     }));
