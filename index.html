@@ -127,7 +127,7 @@
 <body>
 <main>
   <h1>Planilla de marmoleo</h1>
-  <p class="lead">Se cargan el Listing Faena y el Teins del día, y se descarga la planilla con una hoja por tropa W, lista para completar.</p>
+  <p class="lead">Se cargan el Listing Faena y el Twins del día, y se descarga la planilla con una hoja por tropa W, lista para completar.</p>
 
   <form id="form" novalidate>
     <section class="paso">
@@ -145,11 +145,11 @@
 
     <section class="paso">
       <span class="n" aria-hidden="true">2</span>
-      <h2 id="h-teins">Teins</h2>
+      <h2 id="h-twins">Twins</h2>
       <div class="cuerpo">
-        <p class="ayuda">Archivo DESCARGA_TEINS (faena detallada) del mismo día.</p>
-        <label class="archivo" id="drop-teins">
-          <input type="file" name="teins" accept=".xlsx" aria-labelledby="h-teins">
+        <p class="ayuda">Bajada de Twins (faena detallada) del mismo día. El nombre del archivo puede variar.</p>
+        <label class="archivo" id="drop-twins">
+          <input type="file" name="twins" accept=".xlsx" aria-labelledby="h-twins">
           <span class="btn-falso">Elegir archivo</span>
           <span class="nombre">Ningún archivo seleccionado</span>
         </label>
@@ -251,7 +251,7 @@
 
     const fd = new FormData(form);
     if (!fd.get('listing').name) return mostrarError('Seleccione el archivo del Listing Faena.');
-    if (!fd.get('teins').name) return mostrarError('Seleccione el archivo del Teins.');
+    if (!fd.get('twins').name) return mostrarError('Seleccione el archivo del Twins.');
     if (!/^\d+$/.test((fd.get('serie') || '').trim())) return mostrarError('Ingrese el primer número de serie (solo dígitos).');
 
     btn.disabled = true; btn.textContent = 'Generando…';
@@ -293,9 +293,9 @@
 
     const fb = document.getElementById('faltantes');
     if (d.faltantes.length) {
-      fb.innerHTML = '<strong>Tropas W del Listing que no están completas en el Teins</strong><ul>' +
+      fb.innerHTML = '<strong>Tropas W del Listing que no están completas en el Twins</strong><ul>' +
         d.faltantes.map(f => '<li>' + (f.estado === 'ausente'
-          ? 'Tropa ' + f.tropa + ': no figura en el Teins (' + f.esperados + ' animales, garrones ' + f.desde + ' a ' + f.hasta + ').'
+          ? 'Tropa ' + f.tropa + ': no figura en el Twins (' + f.esperados + ' animales, garrones ' + f.desde + ' a ' + f.hasta + ').'
           : 'Tropa ' + f.tropa + ': faltan ' + (f.esperados - f.presentes) + ' de ' + f.esperados + ' animales (garrones ' +
             f.garrones_faltantes.join(', ') + ').') + '</li>').join('') +
         '</ul><p style="margin:8px 0 0">Es posible que aún no estén valorizadas. Corresponde reclamar a Compra de Hacienda; las tropas ausentes no tienen hoja en la planilla.</p>';
