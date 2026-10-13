@@ -50,12 +50,12 @@ def _error(mensaje: str, codigo: int = 400):
 @app.post("/api/generar")
 def api_generar():
     listing = request.files.get("listing")
-    teins = request.files.get("teins")
+    twins = request.files.get("twins")
     if not listing or not listing.filename:
         return _error("Falta el archivo del Listing Faena.")
-    if not teins or not teins.filename:
-        return _error("Falta el archivo del Teins.")
-    for f in (listing, teins):
+    if not twins or not twins.filename:
+        return _error("Falta el archivo del Twins.")
+    for f in (listing, twins):
         if not f.filename.lower().endswith(".xlsx"):
             return _error(f"«{f.filename}» no es un archivo .xlsx.")
 
@@ -72,7 +72,7 @@ def api_generar():
             return _error("La fecha de la planilla no es válida.")
 
     try:
-        res = generar(listing.stream, teins.stream, serie, fecha, listing.filename, teins.filename)
+        res = generar(listing.stream, twins.stream, serie, fecha, listing.filename, twins.filename)
     except DatosInvalidos as exc:
         return _error(str(exc), 422)
 
