@@ -5,7 +5,7 @@ App web que arma la **planilla de evaluación de carcasas (cuota Reglamento CE 4
 ## Uso
 
 1. Descargar el **Listing Faena** (`GD_informe_ListingFaena_*.xlsx`).
-2. Descargar el **Teins** (`DESCARGA_TEINS_*.xlsx`).
+2. Descargar el **Twins** (`DESCARGA_TWINS_*.xlsx`).
 3. Abrir la app, cargar ambos archivos, indicar el **primer número de serie** y generar.
 
 Se descarga un Excel con una hoja por tropa. Los archivos se procesan en memoria y no se guardan en el servidor.
@@ -13,7 +13,7 @@ Se descarga un Excel con una hoja por tropa. Los archivos se procesan en memoria
 ## Reglas de armado
 
 - **Hojas:** una por cada tropa con amparo **W** en el Listing Faena, en el orden del listing (por garrón inicial). El nombre de la hoja es el número de tropa.
-- **Filas:** solo los animales con amparo **W** en el Teins, ordenados por número de garrón. Se completan GARRÓN, CLASIFICACIÓN (`CLAS`) y TIPIFICACIÓN (`TIP`). Los animales de la misma tropa con otro amparo (EXPORTACIÓN, NO HILTON, CONSUMO) no se incluyen y se informan en pantalla.
+- **Filas:** solo los animales con amparo **W** en el Twins, ordenados por número de garrón. Se completan GARRÓN, CLASIFICACIÓN (`CLAS`) y TIPIFICACIÓN (`TIP`). Los animales de la misma tropa con otro amparo (EXPORTACIÓN, NO HILTON, CONSUMO) no se incluyen y se informan en pantalla.
 - **Fecha:** día siguiente a la faena. Puede indicarse otra en el formulario.
 - **N° de serie:** se ingresa el de la primera hoja y las siguientes continúan en forma correlativa (por ejemplo `00018335`, `00018336`, …). Si se ingresa sin ceros a la izquierda se completa a 8 dígitos.
 - Las columnas de osificación, marmoleo, color, consistencia, textura y apto quedan en blanco para completar. La fila **TOTAL AUTORIZADAS** suma la columna SACRAS.
@@ -64,5 +64,5 @@ python make_template.py planilla_nueva.xlsx
 ## Verificación contra una planilla de referencia
 
 ```bash
-python verificar.py listing.xlsx teins.xlsx 00018335 planilla_de_referencia.xlsx
+python verificar.py listing.xlsx twins.xlsx 00018335 planilla_de_referencia.xlsx
 ```
